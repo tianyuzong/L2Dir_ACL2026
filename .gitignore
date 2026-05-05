@@ -1,0 +1,24 @@
+# Runtime outputs
+outputs/
+wandb/
+logs/
+*.log
+
+# Model/checkpoint artifacts
+checkpoint*/
+*-checkpoint*/
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+adapter_config.json
+adapter_model.*
+pytorch_model*
+model-*.safetensors
+
+# Local caches and temporary files
+hf_cache/
+.cache/
+__pycache__/
+*.pyc
