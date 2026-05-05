@@ -1,9 +1,5 @@
 # L2Dir VLM Training and Evaluation Code
 
-This folder contains the code needed to reproduce the VLM-based training and evaluation used in the paper. It is intended to be copied into the paper repository as open-source code.
-
-No model checkpoints, generated embeddings, cached data, W&B logs, private tokens, or machine-specific paths are included.
-
 Before running, replace all placeholder paths, model identifiers, cache locations, and optional service settings with your own values. See `env.example`; do not commit real private account values.
 
 ## Contents
