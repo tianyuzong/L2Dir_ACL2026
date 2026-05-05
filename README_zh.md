@@ -30,6 +30,8 @@ conda activate vlm2v
 
 注意：GME baseline 不应使用该 VLM2Vec 环境运行。GME 模型请按照 GME 官方仓库及其官方依赖版本单独配置环境。
 
+复现说明：当前代码发布版本尚无法精确复现 VLM2Vec V2 baseline 的原始分数。该差异可能与 `num_workers` 超参数以及所安装的 `datasets` 包版本有关。目前该问题尚无确认的解决方案。
+
 ## 数据与 Checkpoint
 
 脚本需要用户通过环境变量提供自己的数据路径和模型/checkpoint 路径。本开源目录不包含任何 checkpoint。

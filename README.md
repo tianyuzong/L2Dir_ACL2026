@@ -30,6 +30,8 @@ For a public release, users should install the dependencies in `requirements.txt
 
 Important: GME baselines are not expected to run in this VLM2Vec environment. Please configure GME models according to the official GME repository and its official dependency versions.
 
+Reproduction note: this code release currently cannot reproduce the original VLM2Vec V2 baseline scores exactly. The discrepancy may be related to the `num_workers` hyperparameter and the installed `datasets` package version. We do not currently have a confirmed solution for this issue.
+
 ## Data and Checkpoints
 
 The scripts require users to provide their own data paths and model/checkpoint paths through environment variables. The release intentionally does not include any checkpoints.
