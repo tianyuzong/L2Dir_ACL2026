@@ -308,7 +308,7 @@ pip install -r requirements.txt
 
 ### 2. Data & Environment Configuration
 
-All training and evaluation scripts read local dataset directories, model paths, and output directories from environment variables so that no machine-specific paths or private credentials are ever hard-coded. Review [`env.example`](env.example) before running:
+All training and evaluation scripts read local dataset directories, model paths, and output directories from environment variables. Review [`env.example`](env.example) before running:
 
 | Variable | Required | Default | Description |
 | :--- | :---: | :--- | :--- |
@@ -319,9 +319,6 @@ All training and evaluation scripts read local dataset directories, model paths,
 | `OUTPUT_DIR` | Optional | `./outputs/l2dir_vlm_qwen2vl_2b_imageonly` | Directory for saving training checkpoints, rendered YAML configs, and logs |
 | `OUTPUT_BASEDIR` | Optional | `./outputs/eval_l2dir_vlm_qwen2vl_2b` | Directory for saving MMEB-V2 evaluation predictions and metric summaries |
 | `NUM_GPUS` | Optional | `8` | Number of GPUs passed to `torchrun --nproc_per_node` |
-
-> [!WARNING]
-> **Security Reminder:** Never commit real Hugging Face tokens, W&B API keys, proxy URLs, or private account paths into tracked files. Configure `HF_HOME`, `HF_ENDPOINT`, or `WANDB_*` strictly in your own shell environment.
 
 ### 3. Training
 

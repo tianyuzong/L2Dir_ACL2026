@@ -320,9 +320,6 @@ pip install -r requirements.txt
 | `OUTPUT_BASEDIR` | 可选 | `./outputs/eval_l2dir_vlm_qwen2vl_2b` | MMEB-V2 评测结果与特征缓存输出目录 |
 | `NUM_GPUS` | 可选 | `8` | `torchrun --nproc_per_node` 使用的 GPU 数量 |
 
-> [!WARNING]
-> **安全提醒：** 切勿将真实的 Hugging Face Token、W&B 账号密钥、私有代理地址或个人机器路径写入受 Git 跟踪的文件中。如需配置 `HF_HOME`、`HF_ENDPOINT` 或 `WANDB_*`，请仅在你本地的 Shell 环境中导出。
-
 ### 3. 模型训练
 
 设置本地 MMEB 训练图片目录与输出目录后，在仓库根目录启动 8 卡训练脚本（脚本会自动将 `configs/train_image.yaml` 中的路径占位符渲染到 `${OUTPUT_DIR}` 后调用 `train.py`）：
