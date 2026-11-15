@@ -65,7 +65,7 @@
 ## ✨ 方法概览与核心亮点
 
 > [!IMPORTANT]
-> **核心思想（TL;DR）：** 主流多模态无监督对比学习（如 InfoNCE）几乎只关注单位超球面上的**方向对齐**，而忽略了表征模长（$L_2$-norm）所承载的语义确定性与信息密度。**L2Dir** 提出了一种轻量级、即插即用的协同训练框架，通过并行的**范数对齐投影器（NAP）**与严格有界的对比损失 **InfoTN**，在**无需额外数据、无需知识蒸馏、无需外部监督且推理阶段零额外开销**的前提下，实现 $L_2$ 范数对齐与方向一致性的联合优化。
+> **核心思想（TL;DR）：** 主流多模态无监督对比学习（如 InfoNCE）几乎只关注单位超球面上的**方向对齐**，而忽略了表征模长（$`L_2`$-norm）所承载的语义确定性与信息密度。**L2Dir** 提出了一种轻量级、即插即用的协同训练框架，通过并行的**范数对齐投影器（NAP）**与严格有界的对比损失 **InfoTN**，在**无需额外数据、无需知识蒸馏、无需外部监督且推理阶段零额外开销**的前提下，实现 $`L_2`$ 范数对齐与方向一致性的联合优化。
 
 <p align="center">
   <img src="assets/fig1_radar.png" width="84%" alt="Performance Boost of L2Dir Across Multiple Tasks"/>
@@ -77,7 +77,7 @@
 ### 四大核心优势
 
 - **🔌 即插即用、极低参数开销：** 在骨干网络末端归一化层旁并行接入轻量级前馈网络 **NAP（Norm Alignment Projector）**，仅增加 **0.13%–0.58%** 的可训练参数（例如在 `Qwen2-VL-2B` LoRA 上仅增加 `+0.05M` 参数），即可无缝接入现有双塔或 VLM 多模态检索管线。
-- **📐 严格数学保证的 `InfoTN` 损失：** 将张量范数差异重构为严格有界于 $[0, 1]$ 的相似度度量 $\operatorname{sim}_{\text{TN}}$，从理论上证明了其关于方向余弦与模长比的单调性及唯一全局最优解 $(k^*, t^*) = (1, 1)$，彻底解决了单模态范数约束直接迁移至多模态场景时的数值振荡与不收敛问题。
+- **📐 严格数学保证的 `InfoTN` 损失：** 将张量范数差异重构为严格有界于 $`[0, 1]`$ 的相似度度量 $`\mathrm{sim}_{\text{TN}}`$，从理论上证明了其关于方向余弦与模长比的单调性及唯一全局最优解 $`(k^*, t^*) = (1, 1)`$，彻底解决了单模态范数约束直接迁移至多模态场景时的数值振荡与不收敛问题。
 - **⚡ 推理阶段零额外成本：** 训练时 `NAP` 作为几何结构正则化信号引导骨干网络的归一化隐状态（`LHS`）形成更具判别力的空间分布；推理检索时直接使用 `LHS` 计算余弦相似度，**不引入任何额外参数、显存或延迟开销**。
 - **🏆 95 项多模态任务全面领先：** 在 **MMEB-V2（81 项图文/视频/视觉文档检索任务）** 与 **M-BEIR（14 项跨模态任务）** 上均取得稳定显著提升，尤其在零样本跨模态迁移场景表现突出（如 `Qwen2-VL-7B` 仅在图文数据训练时，零样本 `ViDoRe-v1` Hit@1 从 `20.58` 跃升至 **`39.15`**）。
 
@@ -85,7 +85,7 @@
 
 ## 🔍 研究动机
 
-为什么单模态文本表征中的模长约束（如 TNCSE 的 $L_{\text{TN}}$）无法直接用于多模态视觉语言模型？
+为什么单模态文本表征中的模长约束（如 TNCSE 的 $`L_{\text{TN}}`$）无法直接用于多模态视觉语言模型？
 
 <table>
   <tr>
@@ -119,33 +119,33 @@
   <sub><b>图 4：</b><b>L2Dir</b> 在两类主流多模态架构上的整体实现：<b>(a) 基于 VLM 的检索框架（VLM2Vec-V2）</b>，采用 EOS Token 池化并在 <code>RMSNorm</code> 旁并行挂载 <code>NAP</code>；<b>(b) 基于双塔的检索框架（UniIR）</b>，在 CLIP 编码器与 T5 融合层末端与 <code>LayerNorm</code> 并行挂载 <code>NAP</code>。</sub>
 </p>
 
-### 1. 有界张量范数相似度（$\operatorname{sim}_{\text{TN}}$）
+### 1. 有界张量范数相似度（$`\mathrm{sim}_{\text{TN}}`$）
 
-设正样本对中的查询特征为 $\mathbf{h}_q$、目标特征为 $\mathbf{h}_t$，定义模长比 $k = \|\mathbf{h}_t\| / \|\mathbf{h}_q\| \in (0, \infty)$，方向余弦相似度 $t = \cos\gamma \in [-1, 1]$。由余弦定理可将张量范数不相似度 $L_{\text{TN}}$ 化简为紧凑的二元形式：
-
-$$
-L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = \frac{\|\mathbf{h}_q - \mathbf{h}_t\|}{\|\mathbf{h}_q\| + \|\mathbf{h}_t\|} = \frac{\sqrt{1 + k^2 - 2kt}}{1 + k} \in [0, 1]
-$$
-
-论文附录 A 与附录 B 严格证明了：$0 \le L_{\text{TN}}(k, t) \le 1$ 恒成立，且对 $t$ 严格单调递减，当且仅当 $(k^*, t^*) = (1, 1)$（模长与方向同时完美对齐）时取得唯一全局最小值 $0$。由此定义有界范数相似度：
+设正样本对中的查询特征为 $`\mathbf{h}_q`$、目标特征为 $`\mathbf{h}_t`$，定义模长比 $`k = \Vert\mathbf{h}_t\Vert / \Vert\mathbf{h}_q\Vert \in (0, \infty)`$，方向余弦相似度 $`t = \cos\gamma \in [-1, 1]`$。由余弦定理可将张量范数不相似度 $`L_{\text{TN}}`$ 化简为紧凑的二元形式：
 
 $$
-\operatorname{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = 1 - L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) \in [0, 1]
+L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = \frac{\Vert \mathbf{h}_q - \mathbf{h}_t\Vert}{\Vert \mathbf{h}_q\Vert+ \Vert \mathbf{h}_t\Vert} = \frac{\sqrt{1 + k^2 - 2kt}}{1 + k} \in [0, 1]
+$$
+
+论文附录 A 与附录 B 严格证明了：$`0 \le L_{\text{TN}}(k, t) \le 1`$ 恒成立，且对 $`t`$ 严格单调递减，当且仅当 $`(k^*, t^*) = (1, 1)`$（模长与方向同时完美对齐）时取得唯一全局最小值 $`0`$。由此定义有界范数相似度：
+
+$$
+\mathrm{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = 1 - L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) \in [0, 1]
 $$
 
 ### 2. 对比范数排序损失（`InfoTN`）与 `L2Dir` 联合训练目标
 
-我们将优化重心从“直接缩小绝对范数差”转化为“在 $L_2$ 范数空间内对正负样本进行相对排序”，结合标准 InfoNCE 在批次候选集 $\mathbb{D}$ 上联合训练：
+我们将优化重心从“直接缩小绝对范数差”转化为“在 $`L_2`$ 范数空间内对正负样本进行相对排序”，结合标准 InfoNCE 在批次候选集 $`\mathbb{D}`$ 上联合训练：
 
 $$
-\mathcal{L}_{\text{NCE}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\operatorname{sim}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau)}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\operatorname{sim}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau)}, \qquad
-\mathcal{L}_{\text{InfoTN}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\operatorname{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau_{\text{TN}})}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\operatorname{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau_{\text{TN}})}
+\mathcal{L}_{\text{NCE}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\mathrm{sim}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau)}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\mathrm{sim}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau)}, \qquad
+\mathcal{L}_{\text{InfoTN}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\mathrm{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau_{\text{TN}})}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\mathrm{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau_{\text{TN}})}
 $$
 
-在模型末端，归一化后的最后一层隐状态 $\mathbf{LHS}$ 输入 $\mathcal{L}_{\text{NCE}}$ 优化方向对齐；并行前馈网络 **NAP** 重构出的未裁剪模长表征 $\mathbf{PO}$ 专用于计算 $\mathcal{L}_{\text{InfoTN}}$（全文统一取 $\lambda = 0.5$）：
+在模型末端，归一化后的最后一层隐状态 $`\mathbf{LHS}`$ 输入 $`\mathcal{L}_{\text{NCE}}`$ 优化方向对齐；并行前馈网络 **NAP** 重构出的未裁剪模长表征 $`\mathbf{PO}`$ 专用于计算 $`\mathcal{L}_{\text{InfoTN}}`$（全文统一取 $`\lambda = 0.5`$）：
 
 $$
-\mathcal{L}_{\text{L2Dir}} = \lambda \cdot \mathcal{L}_{\text{NCE}}\!\left(\mathbf{LHS}_q, \mathbf{LHS}_t^+\right) + (1 - \lambda) \cdot \mathcal{L}_{\text{InfoTN}}\!\left(\mathbf{PO}_q, \mathbf{PO}_t^+\right)
+\mathcal{L}_{\text{L2Dir}} = \lambda \cdot \mathcal{L}_{\text{NCE}}\left(\mathbf{LHS}_q, \mathbf{LHS}_t^+\right) + (1 - \lambda) \cdot \mathcal{L}_{\text{InfoTN}}\left(\mathbf{PO}_q, \mathbf{PO}_t^+\right)
 $$
 
 ---
@@ -281,9 +281,9 @@ L2Dir_ACL2026/
 
 | 论文核心组件 | 源码位置 | 功能说明 |
 | :--- | :--- | :--- |
-| **$\operatorname{sim}_{\text{TN}}$ 与 $\mathcal{L}_{\text{InfoTN}}$**（公式 4, 7） | [`src/loss.py`](src/loss.py)（`InfoTNLoss`、`DistributedInfoTNLoss`） | 计算成对张量范数相似度 `1 - ||h_q - h_t|| / (||h_q|| + ||h_t||)`、对比损失及关于 $k, t$ 的梯度诊断日志。 |
+| **$`\mathrm{sim}_{\text{TN}}`$ 与 $`\mathcal{L}_{\text{InfoTN}}`$**（公式 4, 7） | [`src/loss.py`](src/loss.py)（`InfoTNLoss`、`DistributedInfoTNLoss`） | 计算成对张量范数相似度 `1 - ||h_q - h_t|| / (||h_q|| + ||h_t||)`、对比损失及关于 $`k, t`$ 的梯度诊断日志。 |
 | **双流隐状态提取**（第 3.3 节） | [`src/model/vlm_backbone/qwen2_vl/modeling_qwen2_vl_copy.py`](src/model/vlm_backbone/qwen2_vl/modeling_qwen2_vl_copy.py) | 同时导出经 RMSNorm 归一化的 `last_hidden_state`（`LHS`）与未裁剪模长的 `last_hidden_states_unnorm`。 |
-| **EOS Token 双流池化**（图 4a） | [`src/model/model.py`](src/model/model.py)（`MMEBModel.encode_input`） | 分别通过 `_pooling`（用于 $\mathcal{L}_{\text{NCE}}$）与 `_pooling_unnorm`（用于 $\mathcal{L}_{\text{InfoTN}}$）提取序列末端 EOS 表征。 |
+| **EOS Token 双流池化**（图 4a） | [`src/model/model.py`](src/model/model.py)（`MMEBModel.encode_input`） | 分别通过 `_pooling`（用于 $`\mathcal{L}_{\text{NCE}}`$）与 `_pooling_unnorm`（用于 $`\mathcal{L}_{\text{InfoTN}}`$）提取序列末端 EOS 表征。 |
 | **大批次双流 GradCache** | [`src/grad_cache/grad_cache.py`](src/grad_cache/grad_cache.py) | 对归一化流（`get_rep_fn`）与模长流（`get_rep_fn_unnorm`）同步进行分块梯度缓存，支持单步 1024 等效大 Batch 训练。 |
 
 ---

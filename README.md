@@ -65,7 +65,7 @@
 ## ✨ Overview & Key Highlights
 
 > [!IMPORTANT]
-> **TL;DR:** Standard multimodal contrastive objectives (such as InfoNCE) project embeddings onto a unit hypersphere and optimize *directional* alignment alone—silencing the intrinsic semantic certainty and information density carried by embedding magnitudes ($L_2$-norm). **L2Dir** is a lightweight, plug-and-play framework that jointly optimizes **$L_2$-norm ranking (`InfoTN`)** and **directional consistency (`InfoNCE`)** via a parallel **Norm Alignment Projector (NAP)**—requiring **no extra data, no distillation, no external supervision, and zero extra inference cost**.
+> **TL;DR:** Standard multimodal contrastive objectives (such as InfoNCE) project embeddings onto a unit hypersphere and optimize *directional* alignment alone—silencing the intrinsic semantic certainty and information density carried by embedding magnitudes ($`L_2`$-norm). **L2Dir** is a lightweight, plug-and-play framework that jointly optimizes **$`L_2`$-norm ranking (`InfoTN`)** and **directional consistency (`InfoNCE`)** via a parallel **Norm Alignment Projector (NAP)**—requiring **no extra data, no distillation, no external supervision, and zero extra inference cost**.
 
 <p align="center">
   <img src="assets/fig1_radar.png" width="84%" alt="Performance Boost of L2Dir Across Multiple Tasks"/>
@@ -77,7 +77,7 @@
 ### Why L2Dir?
 
 - **🔌 Plug-and-Play & Ultra-Lightweight:** Attaches a simple feed-forward **Norm Alignment Projector (NAP)** in parallel with the final normalization layer, adding only **0.13%–0.58%** trainable parameters (e.g., `+0.05M` on `Qwen2-VL-2B` LoRA) without modifying backbone weights or requiring auxiliary supervision.
-- **📐 Mathematically Grounded `InfoTN` Objective:** Reformulates tensor norm distance into a strictly bounded similarity metric $\operatorname{sim}_{\text{TN}} \in [0, 1]$ with analytically proven monotonicity and a unique global optimum at $(k^*, t^*) = (1, 1)$, overcoming the severe numerical divergence of unimodal norm constraints in multimodal spaces.
+- **📐 Mathematically Grounded `InfoTN` Objective:** Reformulates tensor norm distance into a strictly bounded similarity metric $`\mathrm{sim}_{\text{TN}} \in [0, 1]`$ with analytically proven monotonicity and a unique global optimum at $`(k^*, t^*) = (1, 1)`$, overcoming the severe numerical divergence of unimodal norm constraints in multimodal spaces.
 - **⚡ Zero Inference Overhead:** During training, `NAP` acts as a geometric regularizer that shapes a cleaner, better-structured representation space in the backbone's normalized last hidden states (`LHS`). At inference time, standard directional matching on `LHS` is used directly with **zero extra latency or memory**.
 - **🏆 Consistent Gains Across 95 Multimodal Tasks:** Validated across **81 MMEB-V2 tasks** (Image-Text, Video-Text, and Visual Document-Text on `Qwen2-VL-2B/7B` and `GME-2B`) and **14 M-BEIR tasks** (`CLIP-B/L` under `UniIR`), including remarkable zero-shot cross-modal transfer (e.g., `+18.57` Hit@1 on ViDoRe-v1 for `Qwen2-VL-7B` trained only on Image-Text data).
 
@@ -85,7 +85,7 @@
 
 ## 🔍 Motivation
 
-Why do unimodal norm-constraint methods (such as TNCSE's $L_{\text{TN}}$) fail when applied directly to Vision-Language Models?
+Why do unimodal norm-constraint methods (such as TNCSE's $`L_{\text{TN}}`$) fail when applied directly to Vision-Language Models?
 
 <table>
   <tr>
@@ -119,33 +119,33 @@ Furthermore, modern Transformer backbones terminate with `RMSNorm` or `LayerNorm
   <sub><b>Figure 4:</b> Overall architecture of <b>L2Dir</b> instantiated on two multimodal retrieval paradigms: <b>(a) VLM-based retrieval (VLM2Vec-V2)</b> with EOS token pooling and parallel <code>RMSNorm</code> + <code>NAP</code> branches; <b>(b) Twin-Tower retrieval (UniIR)</b> with CLIP encoders, T5 Merge Layer, and parallel <code>LayerNorm</code> + <code>NAP</code> branches.</sub>
 </p>
 
-### 1. Bounded Tensor Norm Similarity ($\operatorname{sim}_{\text{TN}}$)
+### 1. Bounded Tensor Norm Similarity ($`\mathrm{sim}_{\text{TN}}`$)
 
-Given a query representation $\mathbf{h}_q$ and target representation $\mathbf{h}_t$ with norm ratio $k = \|\mathbf{h}_t\| / \|\mathbf{h}_q\| \in (0, \infty)$ and cosine similarity $t = \cos\gamma \in [-1, 1]$, the bivariate tensor norm dissimilarity $L_{\text{TN}}$ is formulated via the Law of Cosines as:
-
-$$
-L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = \frac{\|\mathbf{h}_q - \mathbf{h}_t\|}{\|\mathbf{h}_q\| + \|\mathbf{h}_t\|} = \frac{\sqrt{1 + k^2 - 2kt}}{1 + k} \in [0, 1]
-$$
-
-As proven in Appendices A & B of the paper, $L_{\text{TN}}(k, t)$ is strictly bounded in $[0, 1]$, monotonically decreasing with respect to $t$, and achieves its unique global minimum $L_{\text{TN}}(k^*, t^*) = 0$ if and only if $(k^*, t^*) = (1, 1)$ (simultaneous magnitude and directional alignment). Converting dissimilarity into a bounded similarity score yields:
+Given a query representation $`\mathbf{h}_q`$ and target representation $`\mathbf{h}_t`$ with norm ratio $`k = \Vert\mathbf{h}_t\Vert / \Vert\mathbf{h}_q\Vert \in (0, \infty)`$ and cosine similarity $`t = \cos\gamma \in [-1, 1]`$, the bivariate tensor norm dissimilarity $`L_{\text{TN}}`$ is formulated via the Law of Cosines as:
 
 $$
-\operatorname{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = 1 - L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) \in [0, 1]
+L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = \frac{\Vert \mathbf{h}_q - \mathbf{h}_t\Vert}{\Vert \mathbf{h}_q\Vert+ \Vert \mathbf{h}_t\Vert} = \frac{\sqrt{1 + k^2 - 2kt}}{1 + k} \in [0, 1]
+$$
+
+As proven in Appendices A & B of the paper, $`L_{\text{TN}}(k, t)`$ is strictly bounded in $`[0, 1]`$, monotonically decreasing with respect to $`t`$, and achieves its unique global minimum $`L_{\text{TN}}(k^*, t^*) = 0`$ if and only if $`(k^*, t^*) = (1, 1)`$ (simultaneous magnitude and directional alignment). Converting dissimilarity into a bounded similarity score yields:
+
+$$
+\mathrm{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) = 1 - L_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t) \in [0, 1]
 $$
 
 ### 2. Contrastive Norm Ranking (`InfoTN`) & Joint `L2Dir` Optimization
 
-Instead of forcing rigid unit-norm regularization, **L2Dir** performs in-batch contrastive ranking in the $L_2$-norm similarity space alongside standard directional InfoNCE over in-batch targets $\mathbb{D}$:
+Instead of forcing rigid unit-norm regularization, **L2Dir** performs in-batch contrastive ranking in the $`L_2`$-norm similarity space alongside standard directional InfoNCE over in-batch targets $`\mathbb{D}`$:
 
 $$
-\mathcal{L}_{\text{NCE}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\operatorname{sim}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau)}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\operatorname{sim}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau)}, \qquad
-\mathcal{L}_{\text{InfoTN}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\operatorname{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau_{\text{TN}})}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\operatorname{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau_{\text{TN}})}
+\mathcal{L}_{\text{NCE}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\mathrm{sim}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau)}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\mathrm{sim}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau)}, \qquad
+\mathcal{L}_{\text{InfoTN}}(\mathbf{h}_q, \mathbf{h}_t^+) = -\log \frac{\exp(\mathrm{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^+) / \tau_{\text{TN}})}{\sum_{\mathbf{h}_t^j \in \mathbb{D}} \exp(\mathrm{sim}_{\text{TN}}(\mathbf{h}_q, \mathbf{h}_t^j) / \tau_{\text{TN}})}
 $$
 
-To prevent `RMSNorm` / `LayerNorm` from clipping magnitude signals, **Norm Alignment Projector (NAP)** branches immediately before the final normalization layer to produce unnormalized projector outputs $\mathbf{PO}$, while the normalized Last Hidden States $\mathbf{LHS}$ preserve clean directional features. Both negative log-likelihood objectives are optimized jointly ($\lambda = 0.5$ across all settings):
+To prevent `RMSNorm` / `LayerNorm` from clipping magnitude signals, **Norm Alignment Projector (NAP)** branches immediately before the final normalization layer to produce unnormalized projector outputs $`\mathbf{PO}`$, while the normalized Last Hidden States $`\mathbf{LHS}`$ preserve clean directional features. Both negative log-likelihood objectives are optimized jointly ($`\lambda = 0.5`$ across all settings):
 
 $$
-\mathcal{L}_{\text{L2Dir}} = \lambda \cdot \mathcal{L}_{\text{NCE}}\!\left(\mathbf{LHS}_q, \mathbf{LHS}_t^+\right) + (1 - \lambda) \cdot \mathcal{L}_{\text{InfoTN}}\!\left(\mathbf{PO}_q, \mathbf{PO}_t^+\right)
+\mathcal{L}_{\text{L2Dir}} = \lambda \cdot \mathcal{L}_{\text{NCE}}\left(\mathbf{LHS}_q, \mathbf{LHS}_t^+\right) + (1 - \lambda) \cdot \mathcal{L}_{\text{InfoTN}}\left(\mathbf{PO}_q, \mathbf{PO}_t^+\right)
 $$
 
 ---
@@ -281,9 +281,9 @@ L2Dir_ACL2026/
 
 | Paper Component | Implementation Location | Description |
 | :--- | :--- | :--- |
-| **$\operatorname{sim}_{\text{TN}}$ & $\mathcal{L}_{\text{InfoTN}}$** (Eq. 4, 7) | [`src/loss.py`](src/loss.py) (`InfoTNLoss`, `DistributedInfoTNLoss`) | Computes pairwise norm-aware similarity `1 - ||h_q - h_t|| / (||h_q|| + ||h_t||)`, contrastive loss, and analytical $\partial L / \partial k, \partial L / \partial t$ diagnostics. |
+| **$`\mathrm{sim}_{\text{TN}}`$ & $`\mathcal{L}_{\text{InfoTN}}`$** (Eq. 4, 7) | [`src/loss.py`](src/loss.py) (`InfoTNLoss`, `DistributedInfoTNLoss`) | Computes pairwise norm-aware similarity `1 - ||h_q - h_t|| / (||h_q|| + ||h_t||)`, contrastive loss, and analytical $`\partial L / \partial k, \partial L / \partial t`$ diagnostics. |
 | **Dual-Stream Hidden States** (Sec. 3.3) | [`src/model/vlm_backbone/qwen2_vl/modeling_qwen2_vl_copy.py`](src/model/vlm_backbone/qwen2_vl/modeling_qwen2_vl_copy.py) | Exports both RMSNorm-normalized `last_hidden_state` (`LHS`) and pre-norm / unnormalized hidden states (`last_hidden_states_unnorm`). |
-| **EOS Token Pooling** (Fig. 4a) | [`src/model/model.py`](src/model/model.py) (`MMEBModel.encode_input`) | Extracts EOS-pooled normalized embeddings (`_pooling`) for $\mathcal{L}_{\text{NCE}}$ and unnormalized embeddings (`_pooling_unnorm`) for $\mathcal{L}_{\text{InfoTN}}$. |
+| **EOS Token Pooling** (Fig. 4a) | [`src/model/model.py`](src/model/model.py) (`MMEBModel.encode_input`) | Extracts EOS-pooled normalized embeddings (`_pooling`) for $`\mathcal{L}_{\text{NCE}}`$ and unnormalized embeddings (`_pooling_unnorm`) for $`\mathcal{L}_{\text{InfoTN}}`$. |
 | **Large-Batch Dual-Stream GradCache** | [`src/grad_cache/grad_cache.py`](src/grad_cache/grad_cache.py) | Caches gradients across both normalized (`get_rep_fn`) and unnormalized (`get_rep_fn_unnorm`) representation streams to scale effective batch size (e.g., 1024). |
 
 ---
